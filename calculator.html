@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        #calc {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #content {
+            border: 2px solid #2c302c;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #content form input {
+            border: 2px solid #2c302c;
+            outline: 0;
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            font-size: 15px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #backspace {
+            background-color: rgb(237, 89, 30);
+            color: white;
+        }
+        #res {
+            background: #9e9a90;
+            padding: 10px;
+            color: white;
+        }
+        #clear {
+            background-color: rgb(237, 89, 30);
+            color: white;
+        }
+        form #output {
+            display: flex;
+            justify-content: flex-end;
+            margin: 15px 0;
+        }
+        form #output input {
+            text-align: right;
+            flex: 1;
+            font-size: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div id="calc">
+        <div id="content">
+            <form>
+                <div id="output">
+                    <input type="text" id="res">
+                </div>
+                <div class="btn">
+                    <input type="button" value="C" onclick="Clear()" id="clear">
+                    <input type="button" value="⌫" onclick="Back()" id="backspace">
+                    <input type="button" value="%" onclick="Solve('%')">
+                    <input type="button" value="/" onclick="Solve('/')">
+                    <br>
+                    <input type="button" value="7" onclick="Solve('7')">
+                    <input type="button" value="8" onclick="Solve('8')">
+                    <input type="button" value="9" onclick="Solve('9')">
+                    <input type="button" value="x" onclick="Solve('*')">
+                    <br>
+                    <input type="button" value="4" onclick="Solve('4')">
+                    <input type="button" value="5" onclick="Solve('5')">
+                    <input type="button" value="6" onclick="Solve('6')">
+                    <input type="button" value="-" onclick="Solve('-')">
+                    <br>
+                    <input type="button" value="1" onclick="Solve('1')">
+                    <input type="button" value="2" onclick="Solve('2')">
+                    <input type="button" value="3" onclick="Solve('3')">
+                    <input type="button" value="+" onclick="Solve('+')">
+                    <br>
+                    <input type="button" value="00" onclick="Solve('00')">
+                    <input type="button" value="0" onclick="Solve('0')">
+                    <input type="button" value="." onclick="Solve('.')">
+                    <input type="button" value="=" onclick="Result()">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var justEvaluated = false;
+
+        function Solve(val) {
+            var v = document.getElementById('res');
+            var operators = '+-*/x%';
+            var continueKeys = '+-*/x%';
+            if (justEvaluated && !continueKeys.includes(val)) {
+                v.value = '';
+            }
+            justEvaluated = false;
+            if (v.value === 'Error' || v.value === 'Infinity' || v.value === 'NaN') {
+                v.value = '';
+            }
+            var last = v.value.slice(-1);
+            if (last && operators.includes(val) && operators.includes(last)) {
+                v.value = v.value.slice(0, -1);
+            }
+            if (val === '.') {
+                var current = v.value.split(/[+\-*/x%]/).pop();
+                if (current.includes('.')) {
+                    return;
+                }
+                if (current === '') {
+                    v.value += '0';
+                }
+            }
+            v.value += val;
+        }
+
+        function Result() {
+            var res = document.getElementById('res');
+            if (res.value === '' || res.value === 'Error') {
+                return;
+            }
+            var expression = res.value.replace(/x/g, '*');
+            while (/[+\-*/%]{2,}/.test(expression)) {
+                expression = expression.replace(/[+\-*/%]{2,}/g, function (run) {
+                    return run.slice(-1);
+                });
+            }
+            expression = expression.replace(/^[+*/%]+/, '');
+            expression = expression.replace(/[+\-*/%]+$/, '');
+            if (expression === '') {
+                res.value = '';
+                return;
+            }
+            try {
+                var num2 = eval(expression.replace(/\b0+(?=\d)/g, ''));
+                if (!isFinite(num2)) {
+                    res.value = 'Error';
+                    justEvaluated = true;
+                    return;
+                }
+                res.value = num2;
+                justEvaluated = true;
+            } catch {
+                res.value = 'Error';
+            }
+        }
+
+        function Clear() {
+            var inp = document.getElementById('res');
+            inp.value = '';
+            justEvaluated = false;
+        }
+
+        function Back() {
+            var ev = document.getElementById('res');
+            ev.value = ev.value.slice(0, -1);
+            justEvaluated = false;
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey || event.metaKey || event.altKey) {
+                return;
+            }
+            let key = event.key;
+            const validKeys = '0123456789+-*/x.%';
+            if (key === 'Enter' || key === '=') {
+                event.preventDefault();
+                Result();
+            } else if (key === 'Backspace') {
+                event.preventDefault();
+                Back();
+            } else if (key.length === 1) {
+                event.preventDefault();
+                key = key.toLowerCase();
+                if (validKeys.includes(key)) {
+                    Solve(key === '*' ? 'x' : key);
+                } else if (key === 'c') {
+                    Clear();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
